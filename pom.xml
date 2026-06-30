@@ -24,6 +24,32 @@
         <lombok.version>1.18.46</lombok.version>
     </properties>
 
+    <url>https://github.com/yusiwen/spring-commons-job</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>yusiwen</name>
+            <email>yusiwen@yusiwen.cn</email>
+            <organization>yusiwen</organization>
+            <organizationUrl>https://github.com/yusiwen</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/yusiwen/spring-commons-job.git</connection>
+        <developerConnection>scm:git:git@github.com:yusiwen/spring-commons-job.git</developerConnection>
+        <url>https://github.com/yusiwen/spring-commons-job</url>
+        <tag>HEAD</tag>
+    </scm>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
