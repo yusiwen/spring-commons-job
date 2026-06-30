@@ -30,6 +30,10 @@ public interface TaskInfoMapper {
     TaskInfo findById(@Param("id") String id);
 
     @ResultMap("taskInfoMap")
+    @Select("SELECT * FROM task_info WHERE name = #{name}")
+    TaskInfo findByName(@Param("name") String name);
+
+    @ResultMap("taskInfoMap")
     @Select("SELECT * FROM task_info WHERE status = #{status}")
     List<TaskInfo> findByStatus(@Param("status") String status);
 
