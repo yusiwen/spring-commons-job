@@ -11,6 +11,13 @@
     </parent>
 
     <artifactId>spring-commons-job-test</artifactId>
+    <name>spring-commons-job-test</name>
+    <description>Integration tests for spring-commons-job</description>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <maven.install.skip>true</maven.install.skip>
+    </properties>
 
     <dependencies>
         <dependency>

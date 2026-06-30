@@ -11,6 +11,8 @@
     </parent>
 
     <artifactId>spring-commons-job-core</artifactId>
+    <name>spring-commons-job-core</name>
+    <description>Core implementation for spring-commons-job</description>
 
     <dependencies>
         <dependency>

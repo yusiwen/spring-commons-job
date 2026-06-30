@@ -11,6 +11,8 @@
     </parent>
 
     <artifactId>spring-commons-job-starter</artifactId>
+    <name>spring-commons-job-starter</name>
+    <description>Spring Boot auto-configuration starter for spring-commons-job</description>
 
     <dependencies>
         <dependency>
