@@ -10,6 +10,10 @@ public class TaskLog {
     private String taskId;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private Long durationMs;
+    private String triggerType;
+    private String taskParams;
+    private String executionHost;
     private String result;
     private String errorMessage;
     private LocalDateTime createdAt;

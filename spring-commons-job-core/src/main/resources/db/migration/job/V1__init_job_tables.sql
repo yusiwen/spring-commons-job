@@ -21,6 +21,10 @@ CREATE TABLE IF NOT EXISTS task_log (
     task_id         VARCHAR(64)   NOT NULL,
     start_time      TIMESTAMP,
     end_time        TIMESTAMP,
+    duration_ms     BIGINT,
+    trigger_type    VARCHAR(16),
+    task_params     CLOB,
+    execution_host  VARCHAR(128),
     result          VARCHAR(16),
     error_message   CLOB,
     created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP

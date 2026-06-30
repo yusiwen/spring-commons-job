@@ -12,6 +12,8 @@ import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
+import java.net.InetAddress;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
@@ -87,35 +89,48 @@ public class TaskSchedulerManager {
                 return;
             }
 
+            LocalDateTime start = LocalDateTime.now();
             TaskLog taskLog = new TaskLog();
             taskLog.setId(UUID.randomUUID().toString().replace("-", ""));
             taskLog.setTaskId(taskId);
-            taskLog.setStartTime(LocalDateTime.now());
-            taskLog.setCreatedAt(LocalDateTime.now());
+            taskLog.setStartTime(start);
+            taskLog.setTriggerType("CRON");
+            taskLog.setTaskParams(task.getParams());
+            taskLog.setExecutionHost(resolveHost());
+            taskLog.setCreatedAt(start);
 
             try {
-                task.setLastTriggerAt(LocalDateTime.now());
+                task.setLastTriggerAt(start);
                 taskExecutor.execute(task);
                 task.setLastResult("SUCCESS");
-                task.setLastEndAt(LocalDateTime.now());
                 taskLog.setResult("SUCCESS");
                 log.info("Task [{}] executed successfully", task.getName());
             } catch (Exception e) {
                 task.setLastResult("FAIL");
-                task.setLastEndAt(LocalDateTime.now());
                 taskLog.setResult("FAIL");
                 taskLog.setErrorMessage(e.getMessage());
                 log.error("Task [{}] execution failed: {}", task.getName(), e.getMessage(), e);
             } finally {
                 flag.set(false);
+                LocalDateTime end = LocalDateTime.now();
+                task.setLastEndAt(end);
+                taskLog.setEndTime(end);
+                taskLog.setDurationMs(Duration.between(start, end).toMillis());
                 try {
                     taskInfoMapper.update(task);
-                    taskLog.setEndTime(LocalDateTime.now());
                     taskLogMapper.insert(taskLog);
                 } catch (Exception e) {
                     log.error("Failed to persist task execution result for [{}]", task.getName(), e);
                 }
             }
         };
+    }
+
+    private static String resolveHost() {
+        try {
+            return InetAddress.getLocalHost().getHostName();
+        } catch (Exception e) {
+            return "unknown";
+        }
     }
 }

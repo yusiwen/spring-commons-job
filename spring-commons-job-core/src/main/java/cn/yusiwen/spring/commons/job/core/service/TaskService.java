@@ -16,6 +16,8 @@ import org.apache.ibatis.session.RowBounds;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.InetAddress;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -104,17 +106,43 @@ public class TaskService {
             throw new IllegalArgumentException("Task not found: " + id);
         }
         log.info("Manually triggering task [{}]", task.getName());
-        task.setLastTriggerAt(LocalDateTime.now());
+
+        LocalDateTime start = LocalDateTime.now();
+        TaskLog taskLog = new TaskLog();
+        taskLog.setId(UUID.randomUUID().toString().replace("-", ""));
+        taskLog.setTaskId(id);
+        taskLog.setStartTime(start);
+        taskLog.setTriggerType("MANUAL");
+        taskLog.setTaskParams(task.getParams());
+        taskLog.setExecutionHost(resolveHost());
+        taskLog.setCreatedAt(start);
+
+        task.setLastTriggerAt(start);
         try {
             taskExecutor.execute(task);
             task.setLastResult("SUCCESS");
+            taskLog.setResult("SUCCESS");
         } catch (Exception e) {
             task.setLastResult("FAIL");
             task.setLastEndAt(LocalDateTime.now());
+            taskLog.setResult("FAIL");
+            taskLog.setErrorMessage(e.getMessage());
             throw e;
         } finally {
-            task.setLastEndAt(LocalDateTime.now());
+            LocalDateTime end = LocalDateTime.now();
+            task.setLastEndAt(end);
+            taskLog.setEndTime(end);
+            taskLog.setDurationMs(Duration.between(start, end).toMillis());
             taskInfoMapper.update(task);
+            taskLogMapper.insert(taskLog);
+        }
+    }
+
+    private static String resolveHost() {
+        try {
+            return InetAddress.getLocalHost().getHostName();
+        } catch (Exception e) {
+            return "unknown";
         }
     }
 
