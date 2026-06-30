@@ -6,6 +6,9 @@ import org.apache.ibatis.session.RowBounds;
 
 import java.util.List;
 
+/**
+ * MyBatis mapper for the {@code task_log} table.
+ */
 @Mapper
 public interface TaskLogMapper {
 

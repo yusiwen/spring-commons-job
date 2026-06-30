@@ -4,11 +4,20 @@ import cn.yusiwen.spring.commons.job.core.dto.TaskInfoRequest;
 import cn.yusiwen.spring.commons.job.core.dto.TaskInfoVO;
 import cn.yusiwen.spring.commons.job.core.entity.TaskInfo;
 
+/**
+ * Static converter between entity and DTO objects.
+ */
 public final class TaskConverter {
 
     private TaskConverter() {
     }
 
+    /**
+     * Converts a {@link TaskInfo} entity to a {@link TaskInfoVO} response DTO.
+     *
+     * @param entity the task entity, may be {@code null}
+     * @return the corresponding response DTO, or {@code null} if input is {@code null}
+     */
     public static TaskInfoVO toVO(TaskInfo entity) {
         if (entity == null) {
             return null;
@@ -32,6 +41,14 @@ public final class TaskConverter {
         return vo;
     }
 
+    /**
+     * Converts a {@link TaskInfoRequest} request DTO to a {@link TaskInfo} entity.
+     * <p>Note: The returned entity does not have an {@code id} set; the caller
+     * is responsible for generating and assigning the identifier.</p>
+     *
+     * @param request the request DTO, may be {@code null}
+     * @return the corresponding entity, or {@code null} if input is {@code null}
+     */
     public static TaskInfo toEntity(TaskInfoRequest request) {
         if (request == null) {
             return null;

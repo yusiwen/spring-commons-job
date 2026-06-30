@@ -12,6 +12,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
+/**
+ * {@link ApplicationListener} that scans for beans annotated with
+ * {@link ScheduledTask} on context refresh and registers them automatically.
+ * <p>Duplicate task names are skipped to ensure idempotent registration.</p>
+ */
 @Component
 public class ScheduledTaskBeanPostProcessor implements ApplicationListener<ContextRefreshedEvent> {
 
@@ -20,11 +25,23 @@ public class ScheduledTaskBeanPostProcessor implements ApplicationListener<Conte
     private final TaskRegistrar taskRegistrar;
     private final TaskInfoMapper taskInfoMapper;
 
+    /**
+     * Creates a new processor.
+     *
+     * @param taskRegistrar the task registrar for registering annotated tasks
+     * @param taskInfoMapper the mapper for checking existing tasks
+     */
     public ScheduledTaskBeanPostProcessor(TaskRegistrar taskRegistrar, TaskInfoMapper taskInfoMapper) {
         this.taskRegistrar = taskRegistrar;
         this.taskInfoMapper = taskInfoMapper;
     }
 
+    /**
+     * Processes all beans annotated with {@link ScheduledTask} and registers them
+     * if not already present in the database.
+     *
+     * @param event the context refresh event
+     */
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         if (event.getApplicationContext().getParent() != null) {
