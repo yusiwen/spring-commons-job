@@ -5,10 +5,10 @@ A Spring Boot scheduled task management library with database persistence, REST 
 ## Features
 
 - **Persistent scheduling** — Task definitions stored in database, loaded on startup
-- **REST API** — Full CRUD + trigger + enable/disable + refresh endpoints
+- **Three registration methods** — REST API, `TaskRegistrar` (programmatic), `@ScheduledTask` (declarative)
 - **Cron-based** — Uses Spring `TaskScheduler` + `CronTrigger`
 - **Concurrent control** — Per-task allow/disallow concurrent execution
-- **Execution history** — Every execution logged to `task_log` table
+- **Execution history** — Every execution logged to `task_log` table with duration, trigger type, params snapshot
 - **Database agnostic** — Portable SQL + UUID PK, works with H2/MySQL/PostgreSQL/Oracle
 - **Dual-channel schema init** — Flyway (with isolated history table) or `DataSourceInitializer` fallback
 - **Distributed ready** — `TaskExecutor` interface with `LOCAL`/`CALLBACK` mode, `callback_url` field pre-embedded
@@ -87,22 +87,78 @@ POST /api/tasks
 }
 ```
 
+## Creating a Task Programmatically
+
+Inject `TaskRegistrar` and register tasks in code:
+
+```java
+@Component
+public class MyService {
+
+    @Autowired
+    private TaskRegistrar taskRegistrar;
+
+    @PostConstruct
+    public void init() {
+        // Reference an existing bean method
+        taskRegistrar.schedule("日报生成", "0 12 3 * * ?", this, "generate")
+                .params("[\"2026-06-30\"]")
+                .concurrent(false)
+                .register();
+    }
+
+    // Direct Runnable (auto-wrapped as a Spring bean)
+    public void registerCleanup() {
+        taskRegistrar.schedule("清理任务", "0 0 2 * * ?", () -> {
+            tempCleaner.clean();
+        });
+    }
+
+    public void generate(String date) { ... }
+}
+```
+
+### TaskRegistrar API
+
+| Method | Description |
+|---|---|
+| `schedule(name, cron, bean, method)` | Reference existing bean instance |
+| `schedule(name, cron, beanName, method)` | Reference bean by name |
+| `schedule(name, cron, Runnable)` | Register a Runnable (auto wrapped) |
+| `cancel(taskId)` | Disable by task ID |
+| `cancelByName(name)` | Disable by task name |
+
+## Creating a Task Declaratively
+
+Annotate any `@Component` with `@ScheduledTask` — it auto-registers on startup:
+
+```java
+@ScheduledTask(name = "每日统计", cron = "0 0 3 * * ?")
+@Component("statsTask")
+public class StatisticsTask {
+    // default method name is "execute", can be overridden via method attribute
+    public void execute() {
+        // runs every day at 03:00
+    }
+}
+```
+
+> Duplicate names are skipped automatically (idempotent registration).
+
 ## Architecture
 
 ```
-REST API (TaskController)
-       │
-       ▼
-TaskService ──► TaskSchedulerManager ──► ThreadPoolTaskScheduler
-       │               │                         │
-       │               ▼                         │
-       │        ScheduledFuture                    │
-       │          (per task)                       │
-       │                                          │
-       ▼                                          ▼
-TaskExecutor (interface)
-  ├── LocalTaskExecutor    (JVM reflection call)
-  └── RemoteTaskExecutor   (HTTP callback, future)
+Registration paths:
+  REST API (TaskController) ──┐
+  TaskRegistrar (programmatic) ─┤──► TaskService ──► TaskSchedulerManager ──► ThreadPoolTaskScheduler
+  @ScheduledTask (declarative) ─┘         │                     │
+                                          │                     ▼
+                                          │              ScheduledFuture
+                                          │                (per task)
+                                          ▼
+                                    TaskExecutor (interface)
+                                      ├── LocalTaskExecutor    (JVM reflection)
+                                      └── RemoteTaskExecutor   (HTTP callback, future)
 ```
 
 ## Requirements
